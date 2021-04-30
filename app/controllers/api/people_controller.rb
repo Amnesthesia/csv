@@ -5,12 +5,23 @@ module Api
     def index
       query = Person.all
 
-      if sort_params[:sort]
+      
+      query = query.search(filter_params[:search]) if filter_params[:search]
+      
+      if filter_params[:sort]
         query = query.order(
-          sort_params[:sort] => sort_params[:direction] == "asc" ? :asc : :desc
+          filter_params[:sort] => filter_params[:direction] == "asc" ? :asc : :desc
         )
       end
-      render json: query.to_json
+      
+      result = query.map do |person|
+        # Serialize date of birth to js timestamp
+        person.as_json.merge(
+          dob: person.dob.to_i * 1000
+        )
+      end
+
+      render json: result.to_json
     end
 
     def csv
@@ -21,8 +32,6 @@ module Api
 
       result = csv.map do |row|
         data = row.to_h
-
-        puts DateTime.parse(data["date"])
         
         Person.find_or_create_by(
           name: data["name"],
@@ -40,8 +49,8 @@ module Api
       params.permit(:csv, :person)
     end
 
-    def sort_params
-      params.permit(:sort, :direction, :person)
+    def filter_params
+      params.permit(:sort, :direction, :person, :search)
     end
   end
 end

@@ -1,7 +1,9 @@
 Rails.application.routes.draw do
   root to: "people#index"
-  get "/api/people", to: "api/people#index"
-  post "/api/people/upload", to: "api/people#from_csv"
+  namespace :api do
+    post "upload", to: "people#csv"
+    get "people", to: "people#index"
+  end
 
   # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
 end
